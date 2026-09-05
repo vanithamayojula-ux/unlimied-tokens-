@@ -14,6 +14,10 @@ export default defineConfig(({ mode }) => {
     define: {
       __SERVER_PORT__: JSON.stringify(String(serverPort)),
     },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
