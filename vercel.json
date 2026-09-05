@@ -6,19 +6,19 @@
   "rewrites": [
     {
       "source": "/v1/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index?__orig_path=/v1/:path*"
     },
     {
       "source": "/v1beta/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index?__orig_path=/v1beta/:path*"
     },
     {
       "source": "/api/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index?__orig_path=/api/:path*"
     },
     {
       "source": "/mcp/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index?__orig_path=/mcp/:path*"
     },
     {
       "source": "/((?!assets|favicon|logo).*)",

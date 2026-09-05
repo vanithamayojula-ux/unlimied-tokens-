@@ -268,6 +268,11 @@ export function createApp(config?: Config) {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // Test endpoint for deployment verification — no auth required.
+  app.get('/api/test', (_req, res) => {
+    res.json({ message: 'Backend working', status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // Static, unauthenticated API reference: GET /v1/docs (viewer) and
   // GET /v1/openapi.json (spec). Mounted before the rate limiter so the docs
   // are always reachable and don't draw down a caller's request budget. It only
