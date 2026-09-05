@@ -96,6 +96,20 @@ function isTrustworthyOrigin(req: express.Request): boolean {
 export function createApp(config?: Config) {
   const cfg = config ?? loadConfig();
   const app = express();
+
+  // Test & Health endpoints — registered at top before any middleware or auth gates
+  app.get('/api/test', (_req, res) => {
+    res.json({
+      message: 'Backend working',
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.get('/api/ping', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // TRUST_PROXY (#1024): opt-in trust of X-Forwarded-* from a reverse proxy.
   // false (default) ignores forwarded headers so direct callers cannot spoof
   // the client IP; true trusts every hop; a comma-separated list of addresses
@@ -262,16 +276,6 @@ export function createApp(config?: Config) {
   app.use('/api/cache', requireAuth, cacheRouter);
   app.use('/api/compression', requireAuth, compressionRouter);
   app.use('/api/update', requireAuth, updateRouter);
-
-  // Health check — no auth required.
-  app.get('/api/ping', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  // Test endpoint for deployment verification — no auth required.
-  app.get('/api/test', (_req, res) => {
-    res.json({ message: 'Backend working', status: 'ok', timestamp: new Date().toISOString() });
-  });
 
   // Static, unauthenticated API reference: GET /v1/docs (viewer) and
   // GET /v1/openapi.json (spec). Mounted before the rate limiter so the docs
