@@ -1,7 +1,4 @@
-import { API_BASE_URL, getApiUrl } from '../api/config.js';
-
-export { API_BASE_URL, getApiUrl };
-
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const TOKEN_KEY = 'freellmapi_dashboard_token';
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on
@@ -35,9 +32,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  const url = getApiUrl(path);
-  console.log('[apiFetch] Fetching:', url);
-  const res = await fetch(url, {
+  const res = await fetch(`${BASE}${path}`, {
     // `...options` first so an explicit method/body/signal applies, but headers
     // are merged last — otherwise an options.headers would clobber the
     // Content-Type and Authorization we set here.

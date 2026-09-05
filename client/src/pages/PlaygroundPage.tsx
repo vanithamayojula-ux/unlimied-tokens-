@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowUp, ChevronRight, CircleAlert, FileText, Paperclip, X } from 'lucide-react'
-import { apiFetch, getApiUrl } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { buildModelOptions } from '@/lib/model-groups'
 import type { Chain } from '@/components/chain-manager'
@@ -712,8 +712,9 @@ export default function PlaygroundPage() {
       const controller = new AbortController()
       abortRef.current = controller
 
+      const base = import.meta.env.BASE_URL.replace(/\/$/, '')
       const start = Date.now()
-      const res = await fetch(getApiUrl('/v1/chat/completions'), {
+      const res = await fetch(`${base}/v1/chat/completions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
