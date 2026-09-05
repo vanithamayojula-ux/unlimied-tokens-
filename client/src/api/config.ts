@@ -14,5 +14,7 @@ export function getApiUrl(path: string): string {
     return path;
   }
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE_URL}${cleanPath}`;
+  const fullUrl = `${API_BASE_URL}${cleanPath}`;
+  console.log('[API Config] Resolved URL:', fullUrl, '(API_BASE_URL:', API_BASE_URL || 'relative/same-origin', ')');
+  return fullUrl;
 }

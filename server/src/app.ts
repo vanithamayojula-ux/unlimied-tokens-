@@ -97,13 +97,17 @@ export function createApp(config?: Config) {
   const cfg = config ?? loadConfig();
   const app = express();
 
+  console.log('APP INITIALIZED');
+
   // Test & Health endpoints — registered at top before any middleware or auth gates
   app.get('/api/test', (_req, res) => {
-    res.json({
-      message: 'Backend working',
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    });
+    console.log('TEST ROUTE HIT');
+    res.json({ message: 'Backend working', status: 'ok' });
+  });
+
+  app.get('/test', (_req, res) => {
+    console.log('TEST ROUTE HIT');
+    res.json({ message: 'Backend working', status: 'ok' });
   });
 
   app.get('/api/ping', (_req, res) => {
