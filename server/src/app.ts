@@ -177,11 +177,22 @@ export function createApp(config?: Config) {
 
     next();
   });
-  app.use(cors({
-    origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-      callback(null, !origin || allowedCorsOrigins.has(origin));
-    },
-  }));
+  app.use((req, res, next) => {
+    cors({
+      origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+        if (!origin || allowedCorsOrigins.has(origin)) {
+          return callback(null, true);
+        }
+        try {
+          const originHost = new URL(origin).host;
+          if (req.headers.host && originHost === req.headers.host) {
+            return callback(null, true);
+          }
+        } catch {}
+        return callback(null, false);
+      },
+    })(req, res, next);
+  });
   // Two-tier JSON body limits. The LLM wire surfaces carry vision payloads —
   // base64 images inline in the body (~33% inflation; google.ts forwards
   // images up to 8MB apiece) — so a single-screenshot Codex turn can clear

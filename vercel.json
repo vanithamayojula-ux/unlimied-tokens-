@@ -3,18 +3,40 @@
   "buildCommand": "npm run build",
   "outputDirectory": "client/dist",
   "framework": "vite",
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
+    {
+      "source": "/v1",
+      "destination": "/api/index?__orig_path=/v1"
+    },
     {
       "source": "/v1/:path*",
       "destination": "/api/index?__orig_path=/v1/:path*"
+    },
+    {
+      "source": "/v1beta",
+      "destination": "/api/index?__orig_path=/v1beta"
     },
     {
       "source": "/v1beta/:path*",
       "destination": "/api/index?__orig_path=/v1beta/:path*"
     },
     {
-      "source": "/api/:sub(auth|keys|client-profiles|conversations|logs|models|profiles|fallback|embeddings|media|analytics|health|free-tier|settings|premium|backups|cache|compression|update|ping|tags|version|show|chat|generate|embed):path*",
-      "destination": "/api/index?__orig_path=/api/:sub:path*"
+      "source": "/api",
+      "destination": "/api/index?__orig_path=/api"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__orig_path=/api/:path*"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/api/index?__orig_path=/mcp"
     },
     {
       "source": "/mcp/:path*",
@@ -29,7 +51,7 @@
       "destination": "/api/index?__orig_path=/readyz"
     },
     {
-      "source": "/((?!assets|favicon|logo).*)",
+      "source": "/((?!api|v1|v1beta|mcp|livez|readyz|assets|favicon|logo).*)",
       "destination": "/index.html"
     }
   ]

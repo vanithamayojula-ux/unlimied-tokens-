@@ -119,7 +119,7 @@ register(new OpenAICompatProvider({
   name: 'OpenRouter',
   baseUrl: 'https://openrouter.ai/api/v1',
   extraHeaders: {
-    'HTTP-Referer': 'http://localhost:3001',
+    'HTTP-Referer': process.env.PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://freellmapi.org'),
     'X-Title': 'FreeLLMAPI',
   },
 }));

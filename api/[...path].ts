@@ -21,7 +21,7 @@ export default function handler(req: IncomingMessage, res: ServerResponse) {
   // Restore original request URL for Express routing
   if (req.url) {
     try {
-      const parsedUrl = new URL(req.url, 'http://localhost');
+      const parsedUrl = new URL(req.url, 'http://127.0.0.1');
       const origPath = parsedUrl.searchParams.get('__orig_path');
       if (origPath) {
         parsedUrl.searchParams.delete('__orig_path');
