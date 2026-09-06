@@ -402,10 +402,11 @@ export function ChangeCredentialsModal({ mode, onClose }: ChangeCredentialsModal
 export function AuthGate({ children }: { children: ReactNode }) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const { data, isLoading, isError, refetch } = useQuery<AuthStatus>({
+  const { data, isLoading, isError, error, refetch } = useQuery<AuthStatus>({
     queryKey: ['auth-status'],
     queryFn: () => apiFetch('/api/auth/status'),
-    retry: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   })
 
   useEffect(() => {
@@ -424,8 +425,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (isError || !data) {
     return (
       <Centered>
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
-          {t('auth.serverUnreachableBefore')}<code className="font-mono">npm run dev</code>{t('auth.serverUnreachableAfter')}
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-xs text-destructive max-w-sm">
+          <p className="text-center font-medium">
+            {t('auth.serverUnreachableBefore')}<code className="font-mono">npm run dev</code>{t('auth.serverUnreachableAfter')}
+          </p>
+          {error instanceof Error && error.message && (
+            <p className="text-[11px] opacity-80 font-mono text-center break-all">
+              {error.message}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="px-3 py-1.5 rounded bg-destructive text-destructive-foreground font-medium hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Retry Connection
+          </button>
         </div>
       </Centered>
     )
