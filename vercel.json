@@ -60,6 +60,9 @@
     },
     {
       "src": "/((?!assets|favicon|logo).*)",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+      },
       "dest": "/index.html"
     }
   ]
