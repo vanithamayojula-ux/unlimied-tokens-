@@ -13,12 +13,20 @@
       "destination": "/api/index?__orig_path=/v1beta/:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/index?__orig_path=/api/:path*"
+      "source": "/api/:sub(auth|keys|client-profiles|conversations|logs|models|profiles|fallback|embeddings|media|analytics|health|free-tier|settings|premium|backups|cache|compression|update|ping|tags|version|show|chat|generate|embed):path*",
+      "destination": "/api/index?__orig_path=/api/:sub:path*"
     },
     {
       "source": "/mcp/:path*",
       "destination": "/api/index?__orig_path=/mcp/:path*"
+    },
+    {
+      "source": "/livez",
+      "destination": "/api/index?__orig_path=/livez"
+    },
+    {
+      "source": "/readyz",
+      "destination": "/api/index?__orig_path=/readyz"
     },
     {
       "source": "/((?!assets|favicon|logo).*)",

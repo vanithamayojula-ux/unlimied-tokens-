@@ -18,7 +18,7 @@ export default function handler(req: IncomingMessage, res: ServerResponse) {
     expressApp = createApp(config);
   }
 
-  // Restore original request URL for Express routing when proxied via Vercel rewrites
+  // Restore original request URL for Express routing
   if (req.url) {
     try {
       const parsedUrl = new URL(req.url, 'http://localhost');
@@ -31,9 +31,6 @@ export default function handler(req: IncomingMessage, res: ServerResponse) {
         const xForwardedUri = req.headers['x-forwarded-uri'];
         if (typeof xForwardedUri === 'string' && xForwardedUri.length > 0) {
           req.url = xForwardedUri;
-        } else if (req.url.startsWith('/api/index')) {
-          const stripped = req.url.slice('/api/index'.length);
-          req.url = stripped.startsWith('/') ? stripped : '/' + stripped;
         }
       }
     } catch (_e) {
