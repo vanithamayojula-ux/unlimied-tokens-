@@ -7,36 +7,48 @@ import { applyDeclarativeConfigFromEnv } from '../server/src/services/declarativ
 let expressApp: any = null;
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
-  if (!expressApp) {
-    if (process.env.TRUST_PROXY === undefined) {
-      process.env.TRUST_PROXY = '1';
-    }
-    const dbPath = process.env.FREEAPI_DB_PATH || '/tmp/freeapi.db';
-    initDb(dbPath);
-    applyDeclarativeConfigFromEnv();
-    const config = loadConfig();
-    expressApp = createApp(config);
-  }
-
-  // Restore original request URL for Express routing
-  if (req.url) {
-    try {
-      const parsedUrl = new URL(req.url, 'http://127.0.0.1');
-      const origPath = parsedUrl.searchParams.get('__orig_path');
-      if (origPath) {
-        parsedUrl.searchParams.delete('__orig_path');
-        const remainingSearch = parsedUrl.search;
-        req.url = origPath + remainingSearch;
-      } else {
-        const xForwardedUri = req.headers['x-forwarded-uri'];
-        if (typeof xForwardedUri === 'string' && xForwardedUri.length > 0) {
-          req.url = xForwardedUri;
-        }
+  try {
+    if (!expressApp) {
+      if (process.env.TRUST_PROXY === undefined) {
+        process.env.TRUST_PROXY = '1';
       }
-    } catch (_e) {
-      // Keep req.url as is if URL parsing fails
+      const dbPath = process.env.FREEAPI_DB_PATH || '/tmp/freeapi.db';
+      initDb(dbPath);
+      applyDeclarativeConfigFromEnv();
+      const config = loadConfig();
+      expressApp = createApp(config);
     }
-  }
 
-  return expressApp(req, res);
+    // Restore original request URL for Express routing
+    if (req.url) {
+      try {
+        const parsedUrl = new URL(req.url, 'http://127.0.0.1');
+        const origPath = parsedUrl.searchParams.get('__orig_path');
+        if (origPath) {
+          parsedUrl.searchParams.delete('__orig_path');
+          const remainingSearch = parsedUrl.search;
+          req.url = origPath + remainingSearch;
+        } else {
+          const xForwardedUri = req.headers['x-forwarded-uri'];
+          if (typeof xForwardedUri === 'string' && xForwardedUri.length > 0) {
+            req.url = xForwardedUri;
+          }
+        }
+      } catch (_e) {
+        // Keep req.url as is if URL parsing fails
+      }
+    }
+
+    return expressApp(req, res);
+  } catch (err: any) {
+    console.error('[Vercel Path Handler Error]:', err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({
+      error: {
+        message: err?.message || 'Internal Server Error',
+        type: 'internal_server_error'
+      }
+    }));
+  }
 }

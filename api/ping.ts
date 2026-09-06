@@ -6,16 +6,23 @@ import { loadConfig } from '../server/src/lib/config.ts';
 let expressApp: any = null;
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
-  if (!expressApp) {
-    if (process.env.TRUST_PROXY === undefined) {
-      process.env.TRUST_PROXY = '1';
+  try {
+    if (!expressApp) {
+      if (process.env.TRUST_PROXY === undefined) {
+        process.env.TRUST_PROXY = '1';
+      }
+      const dbPath = process.env.FREEAPI_DB_PATH || '/tmp/freeapi.db';
+      initDb(dbPath);
+      const config = loadConfig();
+      expressApp = createApp(config);
     }
-    const dbPath = process.env.FREEAPI_DB_PATH || '/tmp/freeapi.db';
-    initDb(dbPath);
-    const config = loadConfig();
-    expressApp = createApp(config);
-  }
 
-  req.url = '/api/ping';
-  return expressApp(req, res);
+    req.url = '/api/ping';
+    return expressApp(req, res);
+  } catch (err: any) {
+    console.error('[Vercel Ping Error]:', err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ status: 'error', error: err?.message || 'Internal Server Error' }));
+  }
 }

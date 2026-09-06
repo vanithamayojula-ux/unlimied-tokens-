@@ -99,25 +99,24 @@ export function initEncryptionKey(db: Db): void {
     return;
   }
 
-  if (!isDevFallbackAllowed()) {
-    throw missingKeyError();
-  }
-
   const keyFile = keyFilePathFor(db);
 
-  // In-memory / anonymous DBs have no directory to hold a key file, so keep the
-  // legacy settings-table behavior for them (ephemeral runs, most tests).
-  if (!keyFile) {
+  // In-memory, anonymous DBs, or Vercel serverless /tmp fallback:
+  if (!keyFile || process.env.VERCEL || process.env.FREEAPI_ALLOW_AUTO_KEY) {
     const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get() as { value: string } | undefined;
     if (row) {
       cachedKey = parseHexKey(row.value, 'db');
-      console.warn('[crypto] No ENCRYPTION_KEY set — using an auto-generated in-memory key (dev only).');
+      console.warn('[crypto] No ENCRYPTION_KEY set — using auto-generated database key.');
       return;
     }
     cachedKey = crypto.randomBytes(KEY_BYTES);
     db.prepare("INSERT INTO settings (key, value) VALUES ('encryption_key', ?)").run(cachedKey.toString('hex'));
-    console.warn('[crypto] No ENCRYPTION_KEY set — generated an in-memory dev key. Set ENCRYPTION_KEY for production.');
+    console.warn('[crypto] No ENCRYPTION_KEY set — generated fallback key in database. Set ENCRYPTION_KEY for production.');
     return;
+  }
+
+  if (!isDevFallbackAllowed()) {
+    throw missingKeyError();
   }
 
   // 2. An existing key file next to the DB.
