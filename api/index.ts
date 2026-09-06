@@ -6,6 +6,55 @@ import { applyDeclarativeConfigFromEnv } from '../server/src/services/declarativ
 
 let expressApp: any = null;
 
+export function normalizeVercelUrl(req: IncomingMessage): string {
+  let rawUrl = req.url || '/';
+
+  try {
+    const parsed = new URL(rawUrl, 'http://127.0.0.1');
+    const origPath = parsed.searchParams.get('__orig_path');
+    if (origPath) {
+      parsed.searchParams.delete('__orig_path');
+      const search = parsed.search;
+      rawUrl = origPath + search;
+    } else {
+      const xForwardedUri = req.headers['x-forwarded-uri'];
+      if (typeof xForwardedUri === 'string' && xForwardedUri.length > 0) {
+        rawUrl = xForwardedUri;
+      } else if (typeof req.headers['x-matched-path'] === 'string' && req.headers['x-matched-path'].length > 0) {
+        rawUrl = req.headers['x-matched-path'];
+      }
+    }
+  } catch (_e) {}
+
+  let pathOnly = rawUrl;
+  let queryOnly = '';
+  const qIdx = rawUrl.indexOf('?');
+  if (qIdx !== -1) {
+    pathOnly = rawUrl.slice(0, qIdx);
+    queryOnly = rawUrl.slice(qIdx);
+  }
+
+  if (pathOnly.startsWith('/api/index')) {
+    pathOnly = pathOnly.slice('/api/index'.length);
+    if (!pathOnly.startsWith('/')) {
+      pathOnly = '/' + pathOnly;
+    }
+  }
+
+  if (!pathOnly || pathOnly === '/') {
+    pathOnly = '/api';
+  }
+
+  const validPrefixes = ['/api', '/v1', '/v1beta', '/mcp', '/livez', '/readyz'];
+  const hasValidPrefix = validPrefixes.some(prefix => pathOnly === prefix || pathOnly.startsWith(prefix + '/'));
+
+  if (!hasValidPrefix) {
+    pathOnly = '/api' + (pathOnly.startsWith('/') ? pathOnly : '/' + pathOnly);
+  }
+
+  return pathOnly + queryOnly;
+}
+
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   try {
     if (!expressApp) {
@@ -19,29 +68,7 @@ export default function handler(req: IncomingMessage, res: ServerResponse) {
       expressApp = createApp(config);
     }
 
-    // Restore original request URL for Express routing when proxied via Vercel rewrites
-    if (req.url) {
-      try {
-        const parsedUrl = new URL(req.url, 'http://127.0.0.1');
-        const origPath = parsedUrl.searchParams.get('__orig_path');
-        if (origPath) {
-          parsedUrl.searchParams.delete('__orig_path');
-          const remainingSearch = parsedUrl.search;
-          req.url = origPath + remainingSearch;
-        } else {
-          const xForwardedUri = req.headers['x-forwarded-uri'];
-          if (typeof xForwardedUri === 'string' && xForwardedUri.length > 0) {
-            req.url = xForwardedUri;
-          } else if (req.url.startsWith('/api/index')) {
-            const stripped = req.url.slice('/api/index'.length);
-            req.url = stripped.startsWith('/') ? stripped : '/' + stripped;
-          }
-        }
-      } catch (_e) {
-        // Keep req.url as is if URL parsing fails
-      }
-    }
-
+    req.url = normalizeVercelUrl(req);
     return expressApp(req, res);
   } catch (err: any) {
     console.error('[Vercel Handler Error]:', err);
