@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: freellmapi
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/ping
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: ENCRYPTION_KEY
+        generateValue: true
