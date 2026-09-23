@@ -24,9 +24,12 @@ export function UnifiedKeySection() {
 
   const apiKey = data?.apiKey ?? ''
   const masked = apiKey ? apiKey.slice(0, 13) + '•'.repeat(32) : '…'
-  const baseUrl = import.meta.env.DEV
-    ? `http://${window.location.hostname}:${__SERVER_PORT__}/v1`
-    : `${window.location.origin}/v1`
+  const apiOrigin = (import.meta.env.VITE_API_URL as string | undefined) || (import.meta.env.VITE_API_BASE_URL as string | undefined)
+  const baseUrl = apiOrigin
+    ? `${apiOrigin.replace(/\/$/, '')}/v1`
+    : (import.meta.env.DEV
+        ? `http://${window.location.hostname}:${__SERVER_PORT__}/v1`
+        : `${window.location.origin}/v1`)
 
   async function copy() {
     if (!await copyText(apiKey)) {

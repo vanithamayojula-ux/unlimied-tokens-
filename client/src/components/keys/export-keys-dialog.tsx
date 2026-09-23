@@ -23,7 +23,12 @@ const FORMAT_OPTIONS: { value: ExportFormat; label: string; ext: string }[] = [
   { value: 'csv', label: 'CSV', ext: 'csv' },
 ]
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const BASE = (
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+  import.meta.env.BASE_URL ||
+  ''
+).replace(/\/$/, '');
 
 // #786: the desktop build has no user-set password to re-enter, and its server
 // skips re-auth for local requests, so the password step is skipped here too.

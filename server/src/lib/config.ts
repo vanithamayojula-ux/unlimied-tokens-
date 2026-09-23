@@ -75,8 +75,13 @@ export function loadConfig(): Config {
     // disabled fall back to IPv4-only below; HOST overrides the default outright.
     host: process.env.HOST ?? '::',
     dbPath: process.env.FREEAPI_DB_PATH?.trim() || null,
-    dashboardOrigins: (process.env.DASHBOARD_ORIGINS ?? '')
-      .split(',')
+    dashboardOrigins: [
+      ...(process.env.DASHBOARD_ORIGINS ?? '').split(','),
+      ...(process.env.FRONTEND_URL ?? '').split(','),
+      ...(process.env.CORS_ORIGIN ?? '').split(','),
+      ...(process.env.ALLOWED_ORIGINS ?? '').split(','),
+      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+    ]
       .map(s => s.trim())
       .filter(Boolean),
     clientDist: process.env.CLIENT_DIST ?? null,

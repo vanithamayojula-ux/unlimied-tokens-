@@ -1,4 +1,9 @@
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const BASE = (
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+  import.meta.env.BASE_URL ||
+  ''
+).replace(/\/$/, '');
 const TOKEN_KEY = 'freellmapi_dashboard_token';
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on

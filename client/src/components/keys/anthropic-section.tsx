@@ -26,9 +26,12 @@ export function AnthropicSection() {
 
   // Anthropic clients append `/v1/messages` to the base URL, so they want the
   // bare origin (OpenAI clients use origin + /v1, shown in the key section).
-  const origin = import.meta.env.DEV
-    ? `http://${window.location.hostname}:${__SERVER_PORT__}`
-    : window.location.origin
+  const apiOrigin = (import.meta.env.VITE_API_URL as string | undefined) || (import.meta.env.VITE_API_BASE_URL as string | undefined)
+  const origin = apiOrigin
+    ? apiOrigin.replace(/\/$/, '')
+    : (import.meta.env.DEV
+        ? `http://${window.location.hostname}:${__SERVER_PORT__}`
+        : window.location.origin)
 
   const { data: mapData } = useQuery<{ map: AnthropicMap }>({
     queryKey: ['anthropic-map'],

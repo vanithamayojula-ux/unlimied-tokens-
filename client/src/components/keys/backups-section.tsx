@@ -38,7 +38,12 @@ function formatBytes(bytes: number): string {
 // rather than apiFetch — with the same bearer token the rest of /api uses.
 async function downloadBackupFile(id: number, filename: string): Promise<void> {
   const token = getToken()
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+  const base = (
+    (import.meta.env.VITE_API_URL as string | undefined) ||
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+    import.meta.env.BASE_URL ||
+    ''
+  ).replace(/\/$/, '')
   const res = await fetch(`${base}/api/backups/${id}/download`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })

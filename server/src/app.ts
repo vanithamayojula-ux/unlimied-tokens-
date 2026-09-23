@@ -180,17 +180,21 @@ export function createApp(config?: Config) {
   app.use((req, res, next) => {
     cors({
       origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-        if (!origin || allowedCorsOrigins.has(origin)) {
+        if (!origin || allowedCorsOrigins.has(origin) || allowedCorsOrigins.has('*')) {
           return callback(null, true);
         }
         try {
-          const originHost = new URL(origin).host;
-          if (req.headers.host && originHost === req.headers.host) {
+          const parsed = new URL(origin);
+          if (req.headers.host && parsed.host === req.headers.host) {
+            return callback(null, true);
+          }
+          if (parsed.hostname.endsWith('.vercel.app') || parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
             return callback(null, true);
           }
         } catch {}
         return callback(null, false);
       },
+      credentials: true,
     })(req, res, next);
   });
   // Two-tier JSON body limits. The LLM wire surfaces carry vision payloads —
