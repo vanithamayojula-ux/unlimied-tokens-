@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, getToken } from '@/lib/api'
+import { apiFetch, getToken, BASE } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,13 +38,7 @@ function formatBytes(bytes: number): string {
 // rather than apiFetch — with the same bearer token the rest of /api uses.
 async function downloadBackupFile(id: number, filename: string): Promise<void> {
   const token = getToken()
-  const base = (
-    (import.meta.env.VITE_API_URL as string | undefined) ||
-    (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-    import.meta.env.BASE_URL ||
-    ''
-  ).replace(/\/$/, '')
-  const res = await fetch(`${base}/api/backups/${id}/download`, {
+  const res = await fetch(`${BASE}/api/backups/${id}/download`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) {

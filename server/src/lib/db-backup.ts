@@ -193,7 +193,7 @@ async function writeTarget(target: string, payload: Buffer): Promise<void> {
     const res = await fetch(target, {
       method: 'PUT',
       headers,
-      body: payload,
+      body: new Uint8Array(payload),
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`backup upload failed: HTTP ${res.status}`);

@@ -5,6 +5,10 @@ import { useI18n } from '@/i18n'
 // model page + Keys page: the dev server port in DEV, the page origin in a
 // packaged/hosted build.
 export function apiBaseUrl(): string {
+  const customApi = (import.meta.env.VITE_API_URL as string | undefined) || (import.meta.env.VITE_API_BASE_URL as string | undefined);
+  if (customApi) {
+    return `${customApi.replace(/\/$/, '')}/v1`;
+  }
   return import.meta.env.DEV
     ? `http://${window.location.hostname}:${__SERVER_PORT__}/v1`
     : `${window.location.origin}/v1`

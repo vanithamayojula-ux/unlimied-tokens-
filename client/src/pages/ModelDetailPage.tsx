@@ -218,9 +218,12 @@ export default function ModelDetailPage() {
 
   // A ready-to-run request referencing this model by its unified id, so it fails
   // over across every provider above. Same base-URL derivation as the Keys page.
-  const baseUrl = import.meta.env.DEV
-    ? `http://${window.location.hostname}:${__SERVER_PORT__}/v1`
-    : `${window.location.origin}/v1`
+  const customApi = (import.meta.env.VITE_API_URL as string | undefined) || (import.meta.env.VITE_API_BASE_URL as string | undefined)
+  const baseUrl = customApi
+    ? `${customApi.replace(/\/$/, '')}/v1`
+    : (import.meta.env.DEV
+        ? `http://${window.location.hostname}:${__SERVER_PORT__}/v1`
+        : `${window.location.origin}/v1`)
   const snippet = `curl ${baseUrl}/chat/completions \\
   -H "Authorization: Bearer ${keyData?.apiKey || 'YOUR_API_KEY'}" \\
   -H "Content-Type: application/json" \\

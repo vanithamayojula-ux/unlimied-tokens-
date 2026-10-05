@@ -68,9 +68,12 @@ export default function AgentsPage() {
   const seen = new Map(byClient
     .filter(row => row.lastSeenAt && Date.parse(row.lastSeenAt) >= seenCutoff)
     .map(row => [row.clientAgent, row]))
-  const origin = import.meta.env.DEV
-    ? `http://${window.location.hostname}:${__SERVER_PORT__}`
-    : window.location.origin
+  const customApi = (import.meta.env.VITE_API_URL as string | undefined) || (import.meta.env.VITE_API_BASE_URL as string | undefined)
+  const origin = customApi
+    ? customApi.replace(/\/$/, '')
+    : (import.meta.env.DEV
+        ? `http://${window.location.hostname}:${__SERVER_PORT__}`
+        : window.location.origin)
   const shownKey = keyData?.apiKey
     ? (revealKey ? keyData.apiKey : masked(keyData.apiKey))
     : '…'

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: freellmapi
+    name: freellmapi-backend
     env: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -9,7 +9,11 @@ services:
     envVars:
       - key: PORT
         value: 3001
+      - key: HOST
+        value: 0.0.0.0
       - key: NODE_ENV
         value: production
+      - key: CORS_ORIGIN
+        value: "*"
       - key: ENCRYPTION_KEY
         generateValue: true
