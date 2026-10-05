@@ -115,15 +115,11 @@ export function initEncryptionKey(db: Db): void {
     return;
   }
 
-  if (!isDevFallbackAllowed()) {
-    throw missingKeyError();
-  }
-
   // 2. An existing key file next to the DB.
   if (fs.existsSync(keyFile)) {
     const value = fs.readFileSync(keyFile, 'utf8').trim();
     cachedKey = parseHexKey(value, 'file');
-    console.warn(`[crypto] No ENCRYPTION_KEY set — using the auto-generated key at ${keyFile} (dev only). Set ENCRYPTION_KEY for production.`);
+    console.warn(`[crypto] No ENCRYPTION_KEY env var set — using existing key from ${keyFile}.`);
     return;
   }
 
@@ -141,14 +137,20 @@ export function initEncryptionKey(db: Db): void {
       throw new Error('[crypto] Failed to migrate the DB-stored key to a key file: round-trip check failed.');
     }
     db.prepare("DELETE FROM settings WHERE key = 'encryption_key'").run();
-    console.warn(`[crypto] Migrated the legacy DB-stored key to ${keyFile} and removed it from the database (dev only). Set ENCRYPTION_KEY for production.`);
+    console.warn(`[crypto] Migrated the legacy DB-stored key to ${keyFile} and removed it from the database.`);
     return;
   }
 
-  // 4. Generate a fresh key and persist it to the file.
+  // 4. Generate a fresh key and persist it to the file or settings table.
   cachedKey = crypto.randomBytes(KEY_BYTES);
-  writeKeyFileAtomic(keyFile, cachedKey.toString('hex'));
-  console.warn(`[crypto] No ENCRYPTION_KEY set — generated a local dev key at ${keyFile}. Set ENCRYPTION_KEY for production.`);
+  try {
+    writeKeyFileAtomic(keyFile, cachedKey.toString('hex'));
+    console.warn(`[crypto] No ENCRYPTION_KEY set — generated persistent key at ${keyFile}.`);
+    console.warn(`[crypto] Optional: Set ENCRYPTION_KEY=${cachedKey.toString('hex')} in Render Environment Variables to pin this key.`);
+  } catch {
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('encryption_key', ?)").run(cachedKey.toString('hex'));
+    console.warn(`[crypto] No ENCRYPTION_KEY set — saved generated key to database settings table.`);
+  }
 }
 
 function getEncryptionKey(): Buffer {

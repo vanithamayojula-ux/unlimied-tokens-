@@ -22,6 +22,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV FREEAPI_ALLOW_AUTO_KEY=1
 ENV FREELLMAPI_INSTALL_METHOD=docker
 
 COPY --from=deps --chown=node:node /app/package.json ./

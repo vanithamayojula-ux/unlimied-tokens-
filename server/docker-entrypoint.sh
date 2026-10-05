@@ -44,9 +44,17 @@ if [ "$(id -u)" = "0" ]; then
     ensure_owned "$(dirname "$FREEAPI_DB_BACKUP_PATH")"
   fi
 
+  if [ -z "$ENCRYPTION_KEY" ]; then
+    export FREEAPI_ALLOW_AUTO_KEY=1
+  fi
+
   # setpriv ships in util-linux on node:20-bookworm-slim, so it is always
   # present; exec'ing it keeps node as PID 1 so signals reach the server.
   exec setpriv --reuid=node --regid=node --init-groups -- "$@"
+fi
+
+if [ -z "$ENCRYPTION_KEY" ]; then
+  export FREEAPI_ALLOW_AUTO_KEY=1
 fi
 
 exec "$@"
