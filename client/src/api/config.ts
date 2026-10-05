@@ -1,18 +1,30 @@
+import { getBackendUrl } from '@/lib/api';
+
 /**
- * Global API Configuration for Vercel deployment.
- * Unified deployment serves frontend and API serverless functions on the same origin.
- * Relative path ('') routes requests to Vercel's /api and /v1 rewrites cleanly.
+ * Global API Configuration.
+ * Dynamically resolves the backend URL from localStorage or environment variables.
  */
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  ''
-).replace(/\/$/, '');
+export function getApiBaseUrl(): string {
+  return getBackendUrl();
+}
+
+export const API_BASE_URL = {
+  toString() {
+    return getBackendUrl();
+  },
+  valueOf() {
+    return getBackendUrl();
+  },
+  [Symbol.toPrimitive]() {
+    return getBackendUrl();
+  },
+};
 
 export function getApiUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
+  const base = getBackendUrl();
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE_URL}${cleanPath}`;
+  return `${base}${cleanPath}`;
 }

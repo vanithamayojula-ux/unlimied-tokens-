@@ -1,9 +1,45 @@
-export const BASE = (
-  (import.meta.env.VITE_API_URL as string | undefined) ||
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-  import.meta.env.BASE_URL ||
-  ''
-).replace(/\/$/, '');
+const BACKEND_URL_KEY = 'freellmapi_backend_url';
+
+export function getBackendUrl(): string {
+  try {
+    const saved = localStorage.getItem(BACKEND_URL_KEY);
+    if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
+  } catch {}
+  return (
+    (import.meta.env.VITE_API_URL as string | undefined) ||
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+    ''
+  ).replace(/\/$/, '');
+}
+
+export function setBackendUrl(url: string): void {
+  try {
+    const clean = url.trim().replace(/\/$/, '');
+    if (clean) {
+      localStorage.setItem(BACKEND_URL_KEY, clean);
+    } else {
+      localStorage.removeItem(BACKEND_URL_KEY);
+    }
+  } catch {}
+}
+
+export function clearBackendUrl(): void {
+  try {
+    localStorage.removeItem(BACKEND_URL_KEY);
+  } catch {}
+}
+
+export const BASE = {
+  toString() {
+    return getBackendUrl();
+  },
+  valueOf() {
+    return getBackendUrl();
+  },
+  [Symbol.toPrimitive]() {
+    return getBackendUrl();
+  },
+};
 const TOKEN_KEY = 'freellmapi_dashboard_token';
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on
@@ -37,7 +73,8 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  const res = await fetch(`${BASE}${path}`, {
+  const baseUrl = getBackendUrl();
+  const res = await fetch(`${baseUrl}${path}`, {
     // `...options` first so an explicit method/body/signal applies, but headers
     // are merged last — otherwise an options.headers would clobber the
     // Content-Type and Authorization we set here.

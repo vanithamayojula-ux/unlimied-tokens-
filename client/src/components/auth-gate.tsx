@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, setToken, UNAUTHORIZED_EVENT, type ApiError } from '@/lib/api'
+import { apiFetch, setToken, UNAUTHORIZED_EVENT, getBackendUrl, setBackendUrl, type ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
@@ -402,11 +402,12 @@ export function ChangeCredentialsModal({ mode, onClose }: ChangeCredentialsModal
 export function AuthGate({ children }: { children: ReactNode }) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const [customBackendUrl, setCustomBackendUrl] = useState(() => getBackendUrl())
   const { data, isLoading, isError, error, refetch } = useQuery<AuthStatus>({
     queryKey: ['auth-status'],
     queryFn: () => apiFetch('/api/auth/status'),
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 4000),
   })
 
   useEffect(() => {
@@ -425,22 +426,61 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (isError || !data) {
     return (
       <Centered>
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-xs text-destructive max-w-sm">
-          <p className="text-center font-medium">
-            {t('auth.serverUnreachableBefore')}<code className="font-mono">npm run dev</code>{t('auth.serverUnreachableAfter')}
-          </p>
-          {error instanceof Error && error.message && (
-            <p className="text-[11px] opacity-80 font-mono text-center break-all">
-              {error.message}
+        <div className="flex flex-col items-center gap-4 rounded-2xl border bg-card p-6 text-xs max-w-md shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold tracking-tight text-base">FreeLLMAPI</span>
+          </div>
+
+          <div className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive space-y-1">
+            <p className="font-semibold text-center">Cannot reach backend server</p>
+            {error instanceof Error && error.message && (
+              <p className="text-[11px] opacity-80 font-mono text-center break-words">
+                {error.message}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full space-y-2">
+            <label className="text-[11px] font-medium text-foreground block">
+              Enter your Render Backend URL:
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="url"
+                placeholder="https://freellmapi-backend.onrender.com"
+                value={customBackendUrl}
+                onChange={(e) => setCustomBackendUrl(e.target.value)}
+                className="flex-1 text-xs"
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setBackendUrl(customBackendUrl)
+                  toast.success('Backend URL updated')
+                  queryClient.invalidateQueries()
+                  refetch()
+                }}
+              >
+                Connect
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Paste your deployed Render backend URL (e.g. <code>https://freellmapi-backend.onrender.com</code>).
             </p>
-          )}
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="px-3 py-1.5 rounded bg-destructive text-destructive-foreground font-medium hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            Retry Connection
-          </button>
+          </div>
+
+          <div className="w-full pt-2 border-t flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="w-full"
+            >
+              Retry Connection
+            </Button>
+          </div>
         </div>
       </Centered>
     )
