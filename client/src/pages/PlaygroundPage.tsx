@@ -28,6 +28,7 @@ import {
 import { readChatStream } from '@/lib/playground-stream'
 import { ConversationSidebar } from '@/components/playground/conversation-sidebar'
 import { SettingsRail } from '@/components/playground/settings-rail'
+import { SYSTEM_SECURITY_PROMPT } from '@/lib/security-rules'
 import {
   readSampling,
   samplingRequestParams,
@@ -185,7 +186,7 @@ export default function PlaygroundPage() {
   // when set, it's prepended as a `system` message to the request. Persisted
   // to localStorage so it survives reloads.
   const [systemPrompt, setSystemPrompt] = useState<string>(
-    () => localStorage.getItem('playground.systemPrompt') ?? '',
+    () => localStorage.getItem('playground.systemPrompt') ?? SYSTEM_SECURITY_PROMPT,
   )
   const updateSystemPrompt = (v: string) => {
     setSystemPrompt(v)

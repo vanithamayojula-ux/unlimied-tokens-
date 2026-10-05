@@ -17,3 +17,5 @@ services:
         value: "*"
       - key: ENCRYPTION_KEY
         generateValue: true
+      - key: ENFORCE_SECURITY_RULES
+        value: "true"

@@ -9,6 +9,7 @@ import { runImageGeneration, runVideoGeneration, runSpeech, runTranscription, Me
 import multer from 'multer';
 import { getDb } from '../db/index.js';
 import { resolveAuth, prependSystemPrompt, type ResolvedAuth } from '../lib/system-prompt.js';
+import { applySecurityRules, validateSecurityConstraints, isSecurityEnforced } from '../lib/security-rules.js';
 import { contentToString, messageHasImage, normalizeOutboundContent, sanitizeResponse, truncateMessagesForGithub } from '../lib/content.js';
 import { resolveTaskType } from '../lib/task-type.js';
 import { normalizeMessageImages } from '../lib/image-normalize.js';
@@ -1029,7 +1030,7 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
     ? parsed.data.max_tokens : 128;
   const stop = providerSafeStop(parsed.data.stop);
   // A profile's enforced prompt goes ahead of the autocomplete system message.
-  const messages = prependSystemPrompt(completionPromptToMessages(prompt, suffix), auth.systemPrompt);
+  const messages = applySecurityRules(prependSystemPrompt(completionPromptToMessages(prompt, suffix), auth.systemPrompt));
   const estimatedInputTokens = messages.reduce((sum, m) => sum + Math.ceil(contentToString(m.content).length / 4), 0);
   // Cap the reserved output so a huge client-set max_tokens doesn't falsely
   // exclude the whole model pool (#470); input is still counted in full. The
@@ -1571,8 +1572,26 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
   // never compressed away, and FIRST in the list so a caller-supplied system
   // message follows it and cannot override it. Constant per profile, so the
   // provider-side cache prefix stays stable across requests. Neutral no-op for
-  // the unified key and for profiles without a prompt.
   messages = prependSystemPrompt(messages, auth.systemPrompt);
+  messages = applySecurityRules(messages);
+
+  if (isSecurityEnforced()) {
+    for (const m of messages) {
+      if (m.role === 'user') {
+        const text = contentToString(m.content);
+        const check = validateSecurityConstraints(text);
+        if (!check.allowed) {
+          return res.status(400).json({
+            error: {
+              message: check.refusal,
+              type: 'security_violation',
+              code: 'security_constraint_refusal',
+            },
+          });
+        }
+      }
+    }
+  }
 
   // Downscale over-threshold inline images before estimation/routing so the
   // token budget, payload limits, and upstream transfer all see the shrunk

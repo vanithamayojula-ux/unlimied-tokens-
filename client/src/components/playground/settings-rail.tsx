@@ -1,7 +1,8 @@
-import { PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { PanelRightClose, PanelRightOpen, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { ModelCombobox, type ModelComboOption } from '@/components/model-combobox'
+import { SYSTEM_SECURITY_PROMPT } from '@/lib/security-rules'
 import {
   SAMPLING_FIELDS,
   SAMPLING_RANGES,
@@ -210,10 +211,21 @@ export function SettingsRail({
               DOM order (the rail is the last column): `textarea` first-match
               selectors still land on the message box. */}
           <div className="space-y-1.5">
-            <label htmlFor="playground-system-prompt" className="flex items-center gap-1.5 text-xs font-medium">
-              {t('playground.systemPromptLabel')}
-              {systemPrompt.trim() && <span className="size-1.5 rounded-full bg-primary/70" />}
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="playground-system-prompt" className="flex items-center gap-1.5 text-xs font-medium">
+                {t('playground.systemPromptLabel')}
+                {systemPrompt.trim() && <span className="size-1.5 rounded-full bg-primary/70" />}
+              </label>
+              <button
+                type="button"
+                onClick={() => onSystemPromptChange(SYSTEM_SECURITY_PROMPT)}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                title="Reset to project security rules"
+              >
+                <Shield className="size-3" />
+                Security Rules
+              </button>
+            </div>
             <textarea
               id="playground-system-prompt"
               value={systemPrompt}

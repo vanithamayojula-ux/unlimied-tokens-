@@ -12,6 +12,7 @@ import type {
 import { routeRequest, hasEnabledVisionModel, hasEnabledToolsModel, resolveStickyPreference, routingReserveTokens, resolveModelGroupCandidates, type RouteResult, type ChainRow } from '../services/router.js';
 import { getDb } from '../db/index.js';
 import { resolveAuth, prependSystemPrompt } from '../lib/system-prompt.js';
+import { applySecurityRules, validateSecurityConstraints, isSecurityEnforced } from '../lib/security-rules.js';
 import { isUnifyEnabled, getModelGroups, resolveRequestedIdForDispatch } from '../services/model-groups.js';
 import { contentToString, messageHasImage } from '../lib/content.js';
 import { resolveTaskType } from '../lib/task-type.js';
@@ -607,8 +608,26 @@ responsesRouter.post('/responses', async (req: Request, res: Response) => {
 
   // Server-enforced system prompt (#411): after compression so it is never
   // compressed away, first in the list so the caller's own instructions
-  // (`instructions` / system input items) follow it and cannot override it.
   messages = prependSystemPrompt(messages, auth.systemPrompt);
+  messages = applySecurityRules(messages);
+
+  if (isSecurityEnforced()) {
+    for (const m of messages) {
+      if (m.role === 'user') {
+        const text = contentToString(m.content);
+        const check = validateSecurityConstraints(text);
+        if (!check.allowed) {
+          return res.status(400).json({
+            error: {
+              message: check.refusal,
+              type: 'security_violation',
+              code: 'security_constraint_refusal',
+            },
+          });
+        }
+      }
+    }
+  }
 
   // Downscale over-threshold inline images before estimation/routing so the
   // token budget, payload limits, and upstream transfer all see the shrunk

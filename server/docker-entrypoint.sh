@@ -57,4 +57,6 @@ if [ -z "$ENCRYPTION_KEY" ]; then
   export FREEAPI_ALLOW_AUTO_KEY=1
 fi
 
+export ENFORCE_SECURITY_RULES="${ENFORCE_SECURITY_RULES:-true}"
+
 exec "$@"
